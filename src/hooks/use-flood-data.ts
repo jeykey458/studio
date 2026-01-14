@@ -20,7 +20,7 @@ const scenarios: FloodStatus[][] = [
   ['FLOODED', 'FLOODED', 'FLOODED'],
 ];
 
-const UPDATE_INTERVAL = 7000; // 7 seconds
+const UPDATE_INTERVAL = 15000; // 15 seconds
 
 export default function useFloodData() {
   const [zones, setZones] = useState<ZoneData[]>(initialZones);

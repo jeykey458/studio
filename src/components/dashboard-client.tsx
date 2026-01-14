@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useFloodData from '@/hooks/use-flood-data';
 import { useToast } from '@/hooks/use-toast';
 import ZoneStatusList from '@/components/zone-status-list';
@@ -11,12 +11,25 @@ import type { School } from '@/lib/types';
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
 import { findSafeRoute } from '@/lib/actions';
+import NotificationPermission from '@/components/notification-permission';
+import { useFCM } from '@/hooks/use-fcm';
 
 export default function DashboardClient({ school }: { school: School }) {
   const { zones, newlyFloodedZone } = useFloodData();
   const { toast } = useToast();
   const user = useUser();
   const router = useRouter();
+  const { fcmToken, notificationPermissionStatus } = useFCM();
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+
+   useEffect(() => {
+    // Show prompt if permission is not granted and we have a token (or status is determined)
+    if (notificationPermissionStatus === 'default' || notificationPermissionStatus === 'denied') {
+        setShowNotificationPrompt(true);
+    } else {
+        setShowNotificationPrompt(false);
+    }
+  }, [notificationPermissionStatus]);
 
   useEffect(() => {
     if (newlyFloodedZone && user) {
@@ -32,22 +45,30 @@ export default function DashboardClient({ school }: { school: School }) {
         if (routeResponse.success && routeResponse.data) {
           description = `The nearest safe exit is ${routeResponse.data.nearestSafeExit}. ${routeResponse.data.routeDescription}`;
         }
+        
+        const title = `Flood Alert! Zone ${newlyFloodedZone} is flooding.`;
 
+        // In-app toast notification
         toast({
           variant: 'destructive',
           title: (
             <div className="flex items-center gap-2">
               <Siren className="h-5 w-5" />
-              <span className="font-bold">Flood Alert! Zone {newlyFloodedZone} is flooding.</span>
+              <span className="font-bold">{title}</span>
             </div>
           ),
           description: description,
           duration: 20000,
         });
+        
+        // Browser push notification
+        if (notificationPermissionStatus === 'granted') {
+             new Notification(title, { body: description, icon: '/icon.svg' });
+        }
       }
       showToast();
     }
-  }, [newlyFloodedZone, toast, user, zones, school.mapLayoutDescription]);
+  }, [newlyFloodedZone, toast, user, zones, school.mapLayoutDescription, notificationPermissionStatus]);
 
   useEffect(() => {
     if (user === null) {
@@ -62,6 +83,7 @@ export default function DashboardClient({ school }: { school: School }) {
 
   return (
     <div className="container mx-auto p-4 md:p-6">
+       {showNotificationPrompt && <NotificationPermission onClose={() => setShowNotificationPrompt(false)} />}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-2xl font-bold font-headline text-foreground">Hazard Map</h2>
