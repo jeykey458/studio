@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/firebase/provider';
+import { useAuth, useFirebaseApp } from '@/firebase/provider';
 import {
   GoogleAuthProvider,
   signInWithRedirect,
@@ -15,6 +15,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -27,10 +28,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFirestore } from '@/firebase/provider';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { firebaseConfig } from '@/firebase/config';
 
 export default function LoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
+  const firebaseApp = useFirebaseApp();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -272,9 +275,11 @@ export default function LoginPage() {
             Sign In with Google
           </Button>
         </CardContent>
+        <CardFooter className="flex flex-col items-center justify-center text-xs text-muted-foreground pt-4">
+            <p>Connected to Firebase Project:</p>
+            <p className="font-mono text-center break-all">{firebaseApp?.options.projectId || firebaseConfig.projectId || 'Loading...'}</p>
+        </CardFooter>
       </Card>
     </div>
   );
 }
-
-    
