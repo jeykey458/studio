@@ -1,0 +1,293 @@
+{
+  "entities": {
+    "School": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "School",
+      "type": "object",
+      "description": "Represents a school that uses the flood monitoring system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the school entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the school."
+        },
+        "location": {
+          "type": "string",
+          "description": "The physical address or location description of the school."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "location"
+      ]
+    },
+    "Zone": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Zone",
+      "type": "object",
+      "description": "Represents a zone within a school that is monitored for flooding.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the zone entity."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to the School. (Relationship: School 1:N Zone)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or identifier of the zone (e.g., Zone A)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A more detailed description of the zone."
+        }
+      },
+      "required": [
+        "id",
+        "schoolId",
+        "name"
+      ]
+    },
+    "FloodStatus": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FloodStatus",
+      "type": "object",
+      "description": "Represents the real-time flood status of a zone.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the flood status entity."
+        },
+        "zoneId": {
+          "type": "string",
+          "description": "Reference to the Zone. (Relationship: Zone 1:N FloodStatus)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current flood status of the zone (SAFE, WARNING, FLOODED).",
+          "format": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp when the flood status was recorded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "zoneId",
+        "status",
+        "timestamp"
+      ]
+    },
+    "EvacuationExit": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EvacuationExit",
+      "type": "object",
+      "description": "Represents an evacuation exit point in a school.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the evacuation exit entity."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to the School. (Relationship: School 1:N EvacuationExit)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or identifier of the evacuation exit (e.g., Exit 1)."
+        },
+        "location": {
+          "type": "string",
+          "description": "A description of the exit's location within the school."
+        }
+      },
+      "required": [
+        "id",
+        "schoolId",
+        "name",
+        "location"
+      ]
+    },
+    "UserSchool": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserSchool",
+      "type": "object",
+      "description": "Represents the school a user has selected for receiving alerts.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserSchool entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User. (Relationship: User 1:N UserSchool)"
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to the School. (Relationship: School 1:N UserSchool)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "schoolId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the user."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/schools/{schoolId}",
+        "definition": {
+          "entityName": "School",
+          "schema": {
+            "$ref": "#/backend/entities/School"
+          },
+          "description": "Stores school information.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier of the school."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/zones/{zoneId}",
+        "definition": {
+          "entityName": "Zone",
+          "schema": {
+            "$ref": "#/backend/entities/Zone"
+          },
+          "description": "Stores zones for each school.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier of the school."
+            },
+            {
+              "name": "zoneId",
+              "description": "The unique identifier of the zone."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/floodStatuses/{floodStatusId}",
+        "definition": {
+          "entityName": "FloodStatus",
+          "schema": {
+            "$ref": "#/backend/entities/FloodStatus"
+          },
+          "description": "Stores the flood status for each zone within a school.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier of the school."
+            },
+            {
+              "name": "floodStatusId",
+              "description": "The unique identifier of the flood status."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/evacuationExits/{evacuationExitId}",
+        "definition": {
+          "entityName": "EvacuationExit",
+          "schema": {
+            "$ref": "#/backend/entities/EvacuationExit"
+          },
+          "description": "Stores evacuation exits for each school.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier of the school."
+            },
+            {
+              "name": "evacuationExitId",
+              "description": "The unique identifier of the evacuation exit."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/schools/{schoolId}",
+        "definition": {
+          "entityName": "UserSchool",
+          "schema": {
+            "$ref": "#/backend/entities/UserSchool"
+          },
+          "description": "Stores the school selections of each user. This enables path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "schoolId",
+              "description": "The unique identifier of the school."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user information.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability for the flood monitoring application.  \n\nSchools are stored in a top-level collection, `schools`.  Zones, EvacuationExits, and FloodStatuses are stored as subcollections under each School document. This approach provides a clear hierarchical structure that reflects the relationships between these entities.\n\nUserSchool documents are stored under `/users/{userId}/schools/{schoolId}`. This enables easy lookup of a user's selected schools. It leverages path-based ownership for security rules.\n\n**Authorization Independence:**  All authorization relies on `request.auth.uid` and path-based ownership, avoiding any `get()` calls in security rules. For example, only the authenticated user can manage their `UserSchool` documents.\n\n**QAPs (Rules are not Filters):** The segregation of schools into a top-level collection and the use of subcollections for zones, evacuation exits, and flood statuses supports secure `list` operations. Rules can easily restrict access based on path, ensuring that users can only access data for the schools they are authorized to view. For example, listing evacuation exits can be restricted via `/schools/{schoolId}/evacuationExits`."
+  }
+}

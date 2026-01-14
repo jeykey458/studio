@@ -1,0 +1,166 @@
+/**
+ * Core Philosophy: This ruleset enforces a hybrid security model. Data related to schools, zones,
+ * and flood statuses is treated as public, read-only content for all users, including those who are
+ * not signed in. This allows the application to display vital flood information freely. Conversely,
+ * user-specific data, such as a user's profile and their list of followed schools, is strictly
+ * protected under a user-ownership model, where only the authenticated user can access or modify
+ * their own information.
+ *
+ * Data Structure: The data is organized into two main top-level collections:
+ * 1. `/schools/{schoolId}`: A public collection containing school details and nested subcollections
+ *    for `zones`, `floodStatuses`, and `evacuationExits`.
+ * 2. `/users/{userId}`: A private collection where each document represents a user's profile. It
+ *    contains a subcollection, `schools`, to store which schools that user has chosen to follow.
+ *
+ * Key Security Decisions:
+ * - Public Data is Read-Only: All client-side write operations (`create`, `update`, `delete`) to the
+ *   `/schools` collection and its subcollections are explicitly denied. It is assumed this data is
+ *   managed by a trusted backend process using the Firebase Admin SDK.
+ * - Strict User Ownership: All documents under `/users/{userId}` can only be accessed by the user
+ *   whose UID matches the `{userId}` in the path.
+ * - No User Enumeration: The ability to list all documents in the top-level `/users` collection is
+ *   disabled to protect user privacy and prevent data scraping.
+ * - Relational Integrity: On document creation, rules validate that internal ID fields (e.g., `userId`)
+ *   match the IDs in the document path, ensuring data consistency for authorization purposes. These
+ *   IDs are then enforced as immutable on updates.
+ */
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**************************************************
+     *
+     *  Helper Functions
+     *
+     **************************************************/
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the foundation for the user-ownership security model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Ensures a document exists before an update or delete, and that the
+     * authenticated user is the owner. Prevents operations on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+
+    /**************************************************
+     *
+     *  Collection: schools
+     *
+     **************************************************/
+
+    /**
+     * @description Controls access to public school information and its subcollections.
+     * @path        /schools/{schoolId}
+     * @allow       (get) Any user, signed-in or not, can read school data.
+     * @deny        (create) No client is allowed to create, update, or delete schools.
+     * @principle   This data is treated as public read-only content. It is assumed to be
+     *              managed by a trusted backend service or admin, not by client applications.
+     */
+    match /schools/{schoolId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; // Managed by backend only
+      allow update: if false; // Managed by backend only
+      allow delete: if false; // Managed by backend only
+
+      /**
+       * @description Controls access to zones within a school. Publicly readable.
+       * @path        /schools/{schoolId}/zones/{zoneId}
+       * @allow       (get) Any user can read zone data.
+       * @deny        (create) No client can write to this collection.
+       * @principle   Inherits public read-only principle from its parent school collection.
+       */
+      match /zones/{zoneId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      /**
+       * @description Controls access to flood statuses for a school. Publicly readable.
+       * @path        /schools/{schoolId}/floodStatuses/{floodStatusId}
+       * @allow       (get) Any user can read real-time flood status.
+       * @deny        (create) No client can write to this collection.
+       * @principle   Inherits public read-only principle from its parent school collection.
+       */
+      match /floodStatuses/{floodStatusId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      /**
+       * @description Controls access to evacuation exits for a school. Publicly readable.
+       * @path        /schools/{schoolId}/evacuationExits/{evacuationExitId}
+       * @allow       (get) Any user can read evacuation exit information.
+       * @deny        (create) No client can write to this collection.
+       * @principle   Inherits public read-only principle from its parent school collection.
+       */
+      match /evacuationExits/{evacuationExitId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+
+    /**************************************************
+     *
+     *  Collection: users
+     *
+     **************************************************/
+
+    /**
+     * @description Controls access to a user's own profile document.
+     * @path        /users/{userId}
+     * @allow       (create) A new user can create their own user document. auth.uid must match userId.
+     * @deny        (get) A user `user_abc` cannot read the profile of `user_xyz`.
+     * @deny        (list) Listing all users is forbidden to protect privacy.
+     * @principle   Enforces self-creation and strict ownership of a user's root document.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Prevent user enumeration
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages a user's list of followed schools.
+       * @path        /users/{userId}/schools/{schoolId}
+       * @allow       (create) A user can add a school to their followed list. auth.uid must match userId.
+       * @deny        (create) A user `user_abc` cannot modify the followed schools of `user_xyz`.
+       * @principle   Restricts all access to a user's own data tree using path-based ownership.
+       */
+      match /schools/{schoolId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
