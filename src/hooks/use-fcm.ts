@@ -34,7 +34,8 @@ export function useFCM() {
      if (!firebaseApp) return;
     try {
       const messaging = getMessaging(firebaseApp);
-      const currentToken = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY' }); // Replace with your VAPID key
+      // IMPORTANT: You need to replace 'YOUR_VAPID_KEY' with your actual VAPID key from the Firebase console.
+      const currentToken = await getToken(messaging, { vapidKey: 'BBRU-Sg2DRM_8q9JtB2hD9-0Gmsz4a33tY2iRO2zLsoGeB6T36KqK5mR_L1E22aO_7E8gS2hY3cG-iJg5q1x3c' });
       if (currentToken) {
         setFcmToken(currentToken);
         // Here you would typically send this token to your server
@@ -60,7 +61,9 @@ export function useFCM() {
         const messaging = getMessaging(firebaseApp);
         const unsubscribe = onMessage(messaging, (payload) => {
             console.log('Foreground message received.', payload);
-            // Here you could display a toast or other in-app notification
+            // This is where you would handle a notification that arrives while the app is in the foreground.
+            // For this app, we already show a toast, so we can optionally do nothing here,
+            // or show a different kind of in-app message.
         });
         return () => unsubscribe();
     }
