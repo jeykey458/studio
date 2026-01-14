@@ -1,0 +1,52 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .zone-label {
+      font-family: 'PT Sans', sans-serif;
+      font-size: 48px;
+      font-weight: bold;
+      fill: #000;
+      opacity: 0.1;
+      text-anchor: middle;
+      pointer-events: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    .exit-label {
+      font-family: 'PT Sans', sans-serif;
+      font-size: 16px;
+      font-weight: bold;
+      fill: #333;
+      text-anchor: middle;
+    }
+  </style>
+  <rect width="800" height="600" fill="hsl(210 100% 97%)" />
+  
+  <rect id="zone-a" x="50" y="50" width="300" height="500" rx="10" stroke="#ccc" stroke-width="2" />
+  <text x="200" y="330" class="zone-label">A</text>
+  
+  <rect id="zone-b" x="370" y="50" width="380" height="230" rx="10" stroke="#ccc" stroke-width="2"/>
+  <text x="560" y="185" class="zone-label">B</text>
+  
+  <rect id="zone-c" x="370" y="320" width="380" height="230" rx="10" stroke="#ccc" stroke-width="2"/>
+  <text x="560" y="455" class="zone-label">C</text>
+
+  <g transform="translate(10, 280)">
+    <rect x="0" y="0" width="30" height="40" fill="#667eea" rx="4"/>
+     <path d="M15,10 l-5,10 l5,10 M10,20 h10" stroke="white" stroke-width="2" fill="none" />
+    <text x="15" y="55" class="exit-label">Exit 1</text>
+  </g>
+
+  <g transform="translate(760, 280)">
+    <rect x="0" y="0" width="30" height="40" fill="#667eea" rx="4"/>
+    <path d="M15,10 l5,10 l-5,10 M20,20 h-10" stroke="white" stroke-width="2" fill="none" />
+    <text x="15" y="55" class="exit-label">Exit 2</text>
+  </g>
+
+  <g transform="translate(550, 10)">
+    <rect x="0" y="0" width="40" height="30" fill="#667eea" rx="4"/>
+    <path d="M10,15 l10,-5 l10,5 M20,10 v10" stroke="white" stroke-width="2" fill="none" />
+    <text x="20" y="45" class="exit-label">Exit 3</text>
+  </g>
+</svg>
