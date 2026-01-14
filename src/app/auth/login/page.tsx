@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -24,7 +25,7 @@ import { Droplets, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFirestore } from '@/firebase/provider';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function LoginPage() {
@@ -113,9 +114,13 @@ export default function LoginPage() {
       case 'auth/wrong-password':
         return 'Incorrect password. Please try again.';
       case 'auth/email-already-in-use':
-        return 'An account already exists with this email address.';
+        return 'An account already exists with this email address. Please sign in instead.';
       case 'auth/weak-password':
         return 'The password must be at least 6 characters long.';
+      case 'auth/operation-not-allowed':
+        return 'Email/password accounts are not enabled. Please contact support.';
+      case 'auth/configuration-not-found':
+          return 'There was a problem with the authentication service configuration. Please try again later.';
       default:
         return 'An unexpected error occurred. Please try again.';
     }
@@ -271,3 +276,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
