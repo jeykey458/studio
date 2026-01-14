@@ -1,13 +1,34 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/firebase/provider';
-import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithRedirect,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Droplets } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Droplets, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function LoginPage() {
   const auth = useAuth();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     if (auth) {
@@ -16,7 +37,57 @@ export default function LoginPage() {
         await signInWithRedirect(auth, provider);
       } catch (error) {
         console.error('Error signing in with Google: ', error);
+        setError('Failed to sign in with Google. Please try again.');
       }
+    }
+  };
+
+  const handleEmailPasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (auth && email && password) {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        // Redirect is handled by the auth state listener in the main layout
+      } catch (error: any) {
+        console.error('Error signing in: ', error);
+        setError(getFirebaseAuthErrorMessage(error.code));
+      }
+    }
+  };
+
+  const handleEmailPasswordSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (auth && email && password) {
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        toast({
+          title: 'Account Created!',
+          description: 'You have been successfully signed up and logged in.',
+        });
+        // Redirect is handled by the auth state listener in the main layout
+      } catch (error: any) {
+        console.error('Error signing up: ', error);
+        setError(getFirebaseAuthErrorMessage(error.code));
+      }
+    }
+  };
+
+  const getFirebaseAuthErrorMessage = (errorCode: string) => {
+    switch (errorCode) {
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/user-not-found':
+        return 'No account found with this email. Please create an account.';
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'auth/email-already-in-use':
+        return 'An account already exists with this email address.';
+      case 'auth/weak-password':
+        return 'The password must be at least 6 characters long.';
+      default:
+        return 'An unexpected error occurred. Please try again.';
     }
   };
 
@@ -25,13 +96,110 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="inline-flex items-center justify-center mb-4">
-             <Droplets className="h-10 w-10 text-primary" />
+            <Droplets className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to BAHA</CardTitle>
-          <CardDescription>Sign in to access your school's flood monitoring dashboard.</CardDescription>
+          <CardDescription>
+            Sign in or create an account to continue.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleGoogleSignIn} className="w-full">
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Create Account</TabsTrigger>
+            </TabsList>
+            <TabsContent value="signin">
+              <form onSubmit={handleEmailPasswordSignIn}>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email-signin">Email</Label>
+                    <Input
+                      id="email-signin"
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password-signin">Password</Label>
+                    <Input
+                      id="password-signin"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                   {error && (
+                    <Alert variant="destructive" className="text-xs">
+                       <AlertCircle className="h-4 w-4" />
+                       <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button type="submit" className="w-full">
+                    Sign In
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+            <TabsContent value="signup">
+              <form onSubmit={handleEmailPasswordSignUp}>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email-signup">Email</Label>
+                    <Input
+                      id="email-signup"
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password-signup">Password</Label>
+                    <Input
+                      id="password-signup"
+                      type="password"
+                      placeholder="Must be at least 6 characters"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                   {error && (
+                    <Alert variant="destructive" className="text-xs">
+                       <AlertCircle className="h-4 w-4" />
+                       <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button type="submit" className="w-full">
+                    Create Account
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleGoogleSignIn}
+            variant="outline"
+            className="w-full"
+          >
             Sign In with Google
           </Button>
         </CardContent>
