@@ -159,11 +159,17 @@
         "name": {
           "type": "string",
           "description": "The name of the user."
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "The contact number of the user."
         }
       },
       "required": [
         "id",
-        "email"
+        "email",
+        "name",
+        "contactNumber"
       ]
     }
   },

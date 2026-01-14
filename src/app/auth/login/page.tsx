@@ -7,6 +7,7 @@ import {
   signInWithRedirect,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,12 +23,18 @@ import { Label } from '@/components/ui/label';
 import { Droplets, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useFirestore } from '@/firebase/provider';
+import { doc, setDoc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function LoginPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
@@ -59,9 +66,28 @@ export default function LoginPage() {
   const handleEmailPasswordSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (auth && email && password) {
+    if (auth && firestore && email && password && fullName && contactNumber) {
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
+
+        // Update profile with full name
+        await updateProfile(user, { displayName: fullName });
+
+        // Save user data to Firestore
+        const userDocRef = doc(firestore, 'users', user.uid);
+        setDocumentNonBlocking(userDocRef, {
+            id: user.uid,
+            email: user.email,
+            name: fullName,
+            contactNumber: contactNumber,
+        }, { merge: true });
+
+
         toast({
           title: 'Account Created!',
           description: 'You have been successfully signed up and logged in.',
@@ -71,6 +97,10 @@ export default function LoginPage() {
         console.error('Error signing up: ', error);
         setError(getFirebaseAuthErrorMessage(error.code));
       }
+    } else if (!fullName) {
+      setError('Please enter your full name.');
+    } else if (!contactNumber) {
+        setError('Please enter your contact number.')
     }
   };
 
@@ -94,9 +124,10 @@ export default function LoginPage() {
   const handleTabChange = () => {
     setEmail('');
     setPassword('');
+    setFullName('');
+    setContactNumber('');
     setError(null);
   };
-
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -111,7 +142,11 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full" onValueChange={handleTabChange}>
+          <Tabs
+            defaultValue="signin"
+            className="w-full"
+            onValueChange={handleTabChange}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Create Account</TabsTrigger>
@@ -140,10 +175,10 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                   {error && (
+                  {error && (
                     <Alert variant="destructive" className="text-xs">
-                       <AlertCircle className="h-4 w-4" />
-                       <AlertDescription>{error}</AlertDescription>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
                   <Button type="submit" className="w-full">
@@ -155,6 +190,28 @@ export default function LoginPage() {
             <TabsContent value="signup">
               <form onSubmit={handleEmailPasswordSignUp}>
                 <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullname-signup">Full Name</Label>
+                    <Input
+                      id="fullname-signup"
+                      type="text"
+                      placeholder="Juan Dela Cruz"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="contact-signup">Contact Number</Label>
+                    <Input
+                      id="contact-signup"
+                      type="tel"
+                      placeholder="09123456789"
+                      required
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="email-signup">Email</Label>
                     <Input
@@ -177,10 +234,10 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                   {error && (
+                  {error && (
                     <Alert variant="destructive" className="text-xs">
-                       <AlertCircle className="h-4 w-4" />
-                       <AlertDescription>{error}</AlertDescription>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
                   <Button type="submit" className="w-full">
