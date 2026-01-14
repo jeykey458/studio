@@ -10,7 +10,6 @@ import { Siren } from 'lucide-react';
 import type { School } from '@/lib/types';
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
-import { findSafeRoute } from '@/lib/actions';
 
 export default function DashboardClient({ school }: { school: School }) {
   const { zones, newlyFloodedZone } = useFloodData();
@@ -20,36 +19,19 @@ export default function DashboardClient({ school }: { school: School }) {
 
   useEffect(() => {
     if (newlyFloodedZone && user) {
-        const floodedZones = zones.filter(z => z.status === 'FLOODED').map(z => `Zone ${z.id}`);
-        // For simplicity, assuming user is in a non-flooded zone. 
-        // A real app would need to get user's actual location.
-        const safeZones = zones.filter(z => z.status !== 'FLOODED');
-        const userLocation = safeZones.length > 0 ? `Zone ${safeZones[0].id}` : 'Entrance';
-
-        findSafeRoute({
-          currentLocation: userLocation,
-          floodedZones: floodedZones.length > 0 ? floodedZones : ['None'],
-          schoolMap: school.mapLayoutDescription,
-        }).then(response => {
-            let routeDescription = "Please check the map for a safe evacuation route.";
-            if (response.success && response.data) {
-                routeDescription = `Nearest safe exit: ${response.data.nearestSafeExit}. ${response.data.routeDescription}`;
-            }
-
-            toast({
-              variant: 'destructive',
-              title: (
-                <div className="flex items-center gap-2">
-                  <Siren className="h-5 w-5" />
-                  <span className="font-bold">Flood Alert! Zone {newlyFloodedZone} is flooding.</span>
-                </div>
-              ),
-              description: routeDescription,
-              duration: 20000,
-            });
-        })
+        toast({
+          variant: 'destructive',
+          title: (
+            <div className="flex items-center gap-2">
+              <Siren className="h-5 w-5" />
+              <span className="font-bold">Flood Alert! Zone {newlyFloodedZone} is flooding.</span>
+            </div>
+          ),
+          description: "A new zone has been flooded. Please use the 'Route Finder' to determine the safest evacuation route.",
+          duration: 20000,
+        });
     }
-  }, [newlyFloodedZone, toast, user, zones, school]);
+  }, [newlyFloodedZone, toast, user]);
 
   useEffect(() => {
     if (user === null) {
