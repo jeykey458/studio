@@ -41,11 +41,11 @@ export default function EvacuationAI({ zones, schoolLayout }: EvacuationAIProps)
     setError(null);
     setResult(null);
 
-    const floodedZones = zones.filter((z) => z.status === 'FLOODED').map((z) => z.id);
+    const floodedZoneIds = zones.filter((z) => z.status === 'FLOODED').map((z) => z.id);
 
     const response = await findSafeRoute({
       currentLocation: `Zone ${values.currentLocation}`,
-      floodedZones: floodedZones.length > 0 ? floodedZones.map(z => `Zone ${z}`) : ['None'],
+      floodedZones: floodedZoneIds.length > 0 ? floodedZoneIds.map(id => `Zone ${id}`) : ['None'],
       schoolMap: schoolLayout,
     });
 
