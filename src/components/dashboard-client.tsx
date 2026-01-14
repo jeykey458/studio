@@ -10,6 +10,7 @@ import { Siren } from 'lucide-react';
 import type { School } from '@/lib/types';
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
+import { findSafeRoute } from '@/lib/actions';
 
 export default function DashboardClient({ school }: { school: School }) {
   const { zones, newlyFloodedZone } = useFloodData();
@@ -19,6 +20,19 @@ export default function DashboardClient({ school }: { school: School }) {
 
   useEffect(() => {
     if (newlyFloodedZone && user) {
+      const showToast = async () => {
+        const floodedZoneIds = zones.filter((z) => z.status === 'FLOODED').map((z) => z.id);
+        const routeResponse = await findSafeRoute({
+          currentLocation: `Zone ${newlyFloodedZone}`,
+          floodedZones: floodedZoneIds.length > 0 ? floodedZoneIds.map(id => `Zone ${id}`) : ['None'],
+          schoolMap: school.mapLayoutDescription,
+        });
+
+        let description = "A new zone has been flooded. Please check evacuation routes.";
+        if (routeResponse.success && routeResponse.data) {
+          description = `The nearest safe exit is ${routeResponse.data.nearestSafeExit}. ${routeResponse.data.routeDescription}`;
+        }
+
         toast({
           variant: 'destructive',
           title: (
@@ -27,11 +41,13 @@ export default function DashboardClient({ school }: { school: School }) {
               <span className="font-bold">Flood Alert! Zone {newlyFloodedZone} is flooding.</span>
             </div>
           ),
-          description: "A new zone has been flooded. Please use the 'Route Finder' to determine the safest evacuation route.",
+          description: description,
           duration: 20000,
         });
+      }
+      showToast();
     }
-  }, [newlyFloodedZone, toast, user]);
+  }, [newlyFloodedZone, toast, user, zones, school.mapLayoutDescription]);
 
   useEffect(() => {
     if (user === null) {
