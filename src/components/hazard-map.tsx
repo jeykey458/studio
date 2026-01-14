@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import type { ZoneData, FloodStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
-import { Search, ZoomIn, ZoomOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Search, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface HazardMapProps {
   zones: ZoneData[];
@@ -23,9 +24,11 @@ const statusBorderColors: Record<FloodStatus, string> = {
     FLOODED: 'hsl(0, 80%, 70%)',
 };
 
+const INITIAL_VIEWBOX = { x: 0, y: 0, width: 800, height: 600 };
+
 export default function HazardMap({ zones, mapUrl }: HazardMapProps) {
   const [svgContent, setSvgContent] = useState('');
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 800, height: 600 });
+  const [viewBox, setViewBox] = useState(INITIAL_VIEWBOX);
   const [isPanning, setIsPanning] = useState(false);
   const [startPoint, setStartPoint] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
@@ -49,26 +52,22 @@ export default function HazardMap({ zones, mapUrl }: HazardMapProps) {
     }
   }, [zones, svgContent]);
 
+  const handleZoom = (factor: number) => {
+    const { width, height, x, y } = viewBox;
+    const newWidth = width * factor;
+    const newHeight = height * factor;
+
+    // Center the zoom
+    const newX = x + (width - newWidth) / 2;
+    const newY = y + (height - newHeight) / 2;
+
+    setViewBox({ x: newX, y: newY, width: newWidth, height: newHeight });
+  };
+
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const zoomFactor = 1.1;
-    const { width, height } = viewBox;
-    const newWidth = e.deltaY < 0 ? width / zoomFactor : width * zoomFactor;
-    const newHeight = e.deltaY < 0 ? height / zoomFactor : height * zoomFactor;
-    
-    if (svgRef.current) {
-      const CTM = svgRef.current.getScreenCTM();
-      if (CTM) {
-          const { left, top } = svgRef.current.getBoundingClientRect();
-          const mouseX = (e.clientX - left) / CTM.a;
-          const mouseY = (e.clientY - top) / CTM.d;
-
-          const newX = viewBox.x + (mouseX - viewBox.x) * (1 - newWidth / width);
-          const newY = viewBox.y + (mouseY - viewBox.y) * (1 - newHeight / height);
-
-          setViewBox({ x: newX, y: newY, width: newWidth, height: newHeight });
-      }
-    }
+    const zoomFactor = e.deltaY < 0 ? 1 / 1.1 : 1.1;
+    handleZoom(zoomFactor);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -92,12 +91,16 @@ export default function HazardMap({ zones, mapUrl }: HazardMapProps) {
     setIsPanning(false);
   };
 
+  const handleReset = () => {
+    setViewBox(INITIAL_VIEWBOX);
+  };
+
   if (!svgContent) {
     return <Card className="aspect-video w-full flex items-center justify-center bg-muted/50"><Search className="h-8 w-8 text-muted-foreground animate-pulse"/></Card>;
   }
 
   return (
-    <Card className={cn("w-full overflow-hidden touch-none select-none border-2 shadow-lg", isPanning ? 'cursor-grabbing' : 'cursor-grab')}>
+    <Card className={cn("w-full overflow-hidden touch-none select-none border-2 shadow-lg relative", isPanning ? 'cursor-grabbing' : 'cursor-grab')}>
       <svg
         ref={svgRef}
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
@@ -109,6 +112,17 @@ export default function HazardMap({ zones, mapUrl }: HazardMapProps) {
         dangerouslySetInnerHTML={{ __html: svgContent }}
         className="w-full h-auto"
       />
+       <div className="absolute top-2 right-2 flex flex-col gap-2">
+        <Button size="icon" onClick={() => handleZoom(1 / 1.2)} aria-label="Zoom In" variant="secondary" className="h-10 w-10">
+          <ZoomIn className="h-5 w-5" />
+        </Button>
+        <Button size="icon" onClick={() => handleZoom(1.2)} aria-label="Zoom Out" variant="secondary" className="h-10 w-10">
+          <ZoomOut className="h-5 w-5" />
+        </Button>
+        <Button size="icon" onClick={handleReset} aria-label="Reset View" variant="secondary" className="h-10 w-10">
+          <RefreshCw className="h-5 w-5" />
+        </Button>
+      </div>
     </Card>
   );
 }
