@@ -2,9 +2,14 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
-import { getMessaging } from 'firebase/messaging';
+import { Auth, getAuth } from 'firebase/auth';
+import { Firestore, getFirestore } from 'firebase/firestore';
+import { Messaging, getMessaging } from 'firebase/messaging';
+
+let app: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+let messaging: Messaging | null;
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -13,24 +18,27 @@ export function initializeFirebase() {
     // integrates with the initializeApp() function to provide the environment variables needed to
     // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
     // without arguments.
-    let firebaseApp;
     try {
       // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
+      app = initializeApp();
     } catch (e) {
       // Only warn in production because it's normal to use the firebaseConfig to initialize
       // during development
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
-      firebaseApp = initializeApp(firebaseConfig);
+      app = initializeApp(firebaseConfig);
     }
-
-    return getSdks(firebaseApp);
+  } else {
+    app = getApp();
   }
 
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
+  auth = getAuth(app);
+  firestore = getFirestore(app);
+  const isBrowser = typeof window !== 'undefined';
+  messaging = isBrowser ? getMessaging(app) : null;
+  
+  return { firebaseApp: app, auth, firestore, messaging };
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
@@ -42,6 +50,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
     messaging: isBrowser ? getMessaging(firebaseApp) : null,
   };
 }
+
 
 export * from './provider';
 export * from './client-provider';
