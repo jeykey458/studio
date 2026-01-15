@@ -16,6 +16,7 @@ export function useUser() {
       });
       return () => unsubscribe();
     } else {
+      // If auth is not ready, we are in a loading state.
       setUser(undefined);
     }
   }, [auth]);

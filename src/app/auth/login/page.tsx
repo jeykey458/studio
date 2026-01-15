@@ -277,7 +277,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col items-center justify-center text-xs text-muted-foreground pt-4">
             <p>Connected to Firebase Project:</p>
-            <p className="font-mono text-center break-all">{firebaseApp?.options.projectId || firebaseConfig.projectId || 'Loading...'}</p>
+            <p className="font-mono text-center break-all">{firebaseApp?.options.projectId || 'Loading...'}</p>
         </CardFooter>
       </Card>
     </div>
