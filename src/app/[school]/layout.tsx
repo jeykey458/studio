@@ -7,14 +7,14 @@ export async function generateStaticParams() {
   }));
 }
 
-export default function SchoolLayout({
+export default async function SchoolLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: { school: string };
 }) {
-  const schoolId = params.school;
+  const { school: schoolId } = params;
   const school = SCHOOLS.find((s) => s.id === schoolId);
 
   return (
