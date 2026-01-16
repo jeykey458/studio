@@ -1,0 +1,24 @@
+{
+  "name": "BAHA: Flood Monitoring",
+  "short_name": "BAHA",
+  "description": "BAHA Knows Before It Shows. Real-time flood monitoring and dynamic evacuation routing for schools.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7fbff",
+  "theme_color": "#448aff",
+  "icons": [
+    {
+      "src": "/baha-logo-circle.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/baha-logo-circle.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
