@@ -63,7 +63,7 @@ export default function DashboardClient({ school }: { school: School }) {
         
         // Browser push notification
         if (notificationPermissionStatus === 'granted') {
-             new Notification(title, { body: description, icon: '/baha%20logo.png' });
+             new Notification(title, { body: description, icon: '/baha-logo.png' });
         }
       }
       showToast();

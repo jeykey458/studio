@@ -142,7 +142,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="inline-flex items-center justify-center mb-4">
-            <Image src="/baha%20logo.png" alt="Baha Logo" width={40} height={40} />
+            <Image src="/baha-logo.png" alt="Baha Logo" width={40} height={40} />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to BAHA</CardTitle>
           <CardDescription>

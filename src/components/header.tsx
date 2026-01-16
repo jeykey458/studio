@@ -46,7 +46,7 @@ export default function Header({ schoolName, schoolId }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center px-4 md:px-6">
         <Link href={`/${schoolId}`} className="flex items-center gap-2">
-          <Image src="/baha%20logo.png" alt="Baha Logo" width={28} height={28} />
+          <Image src="/baha-logo.png" alt="Baha Logo" width={28} height={28} />
           <span className="text-xl font-bold font-headline text-foreground">BAHA</span>
         </Link>
         <div className="mx-4 h-6 w-px bg-border" />
