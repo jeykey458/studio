@@ -32,8 +32,11 @@ export default function SchoolSelector() {
         <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground">
           Welcome to BAHA
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Real-time flood monitoring and evacuation guidance for your school. Please select your location to begin.
+        <p className="mt-2 text-lg text-primary font-semibold">
+          BAHA Knows Before It Shows.
+        </p>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+          Please select your school to begin.
         </p>
       </div>
 

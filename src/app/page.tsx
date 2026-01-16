@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import { useSchool } from '@/hooks/use-school';
 import SchoolSelector from '@/components/school-selector';
 import { Loader2 } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
+import Image from 'next/image';
 
 export default function Home() {
   const router = useRouter();
@@ -20,35 +22,44 @@ export default function Home() {
   const userLoading = user === undefined;
 
   useEffect(() => {
-    if (isClient && !schoolLoading) {
-      if (school && user) {
-        router.replace(`/${school.id}`);
-      } else if (school && user === null) {
-        // School is selected but user is not logged in, redirect to login
-        router.replace('/auth/login');
-      }
-      // if no school is selected, stay on this page to show SchoolSelector
+    // Only perform redirects once everything has loaded client-side
+    if (!isClient || schoolLoading || userLoading) {
+      return;
     }
-  }, [school, user, schoolLoading, router, isClient]);
 
-  if (!isClient || schoolLoading || userLoading) {
+    if (!user) {
+      router.replace('/auth/login');
+    } else if (school) {
+      router.replace(`/${school.id}`);
+    }
+    // If user is logged in, but no school is selected, we'll fall through to render the SchoolSelector
+  }, [isClient, schoolLoading, userLoading, user, school, router]);
+
+  const isLoading = !isClient || schoolLoading || userLoading;
+  const isRedirecting = !isLoading && (!user || school);
+
+  // Show splash screen while loading or preparing to redirect.
+  if (isLoading || isRedirecting) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading Your School...</p>
-      </div>
-    );
-  }
-  
-  if (school && user) {
-     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Redirecting...</p>
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background text-center p-4">
+        <Image
+          src="/baha-logo-circle.png"
+          width={120}
+          height={120}
+          alt="BAHA Logo"
+          className="mb-8"
+        />
+        <h1 className="text-2xl md:text-3xl font-bold font-headline text-foreground max-w-2xl">
+          BAHA: An IoT-Based Micro-Level Flood Monitoring and Alarm System for School Disaster
+        </h1>
+        <p className="mt-4 text-lg text-primary font-semibold">
+          BAHA Knows Before It Shows.
+        </p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary mt-8" />
       </div>
     );
   }
 
-
+  // If we're done loading and not redirecting, it means we need the user to select a school.
   return <SchoolSelector />;
 }

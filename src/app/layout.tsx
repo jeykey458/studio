@@ -14,8 +14,8 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'BAHA - Real-time Flood Monitoring',
-  description: 'Real-time flood monitoring and dynamic evacuation routing for schools.',
+  title: 'BAHA: An IoT-Based Micro-Level Flood Monitoring and Alarm System for School Disaster',
+  description: 'BAHA Knows Before It Shows. Real-time flood monitoring and dynamic evacuation routing for schools.',
   icons: [{ rel: 'icon', url: '/baha-logo-circle.png' }],
 };
 
