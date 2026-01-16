@@ -163,7 +163,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <div className="inline-flex items-center justify-center mb-4">
             <Image
-              src="/baha-logo.png.png"
+              src="/baha-logo.png"
               width={40}
               height={40}
               alt="BAHA Logo"

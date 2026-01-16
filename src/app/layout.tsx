@@ -16,7 +16,7 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'BAHA - Real-time Flood Monitoring',
   description: 'Real-time flood monitoring and dynamic evacuation routing for schools.',
-  icons: [{ rel: 'icon', url: '/baha-logo.png.png' }],
+  icons: [{ rel: 'icon', url: '/baha-logo.png' }],
 };
 
 export default function RootLayout({
@@ -30,7 +30,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
-        <link rel="icon" href="/baha-logo.png.png" sizes="any" />
+        <link rel="icon" href="/baha-logo.png" sizes="any" />
       </head>
       <body className={cn('font-body antialiased', ptSans.variable)}>
         <FirebaseClientProvider>
