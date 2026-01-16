@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -22,13 +21,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFirestore } from '@/firebase/provider';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { firebaseConfig } from '@/firebase/config';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -115,7 +114,8 @@ export default function LoginPage() {
       case 'auth/user-not-found':
         return 'No account found with this email. Please create an account.';
       case 'auth/wrong-password':
-        return 'Incorrect password. Please try again.';
+      case 'auth/invalid-credential':
+        return 'The password is incorrect.';
       case 'auth/email-already-in-use':
         return 'An account already exists with this email address. Please sign in instead.';
       case 'auth/weak-password':
@@ -142,7 +142,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="inline-flex items-center justify-center mb-4">
-            <Droplets className="h-10 w-10 text-primary" />
+            <Image src="/baha%20logo.png" alt="Baha Logo" width={40} height={40} />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to BAHA</CardTitle>
           <CardDescription>
