@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth, useFirebaseApp } from '@/firebase/provider';
 import {
   GoogleAuthProvider,
@@ -22,13 +22,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Droplets } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFirestore } from '@/firebase/provider';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc, setDoc } from 'firebase/firestore';
 import Image from 'next/image';
+import { useUser } from '@/firebase/auth/use-user';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -40,6 +41,15 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const user = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If user is logged in, redirect them to the homepage.
+    if (user) {
+      router.replace('/');
+    }
+  }, [user, router]);
 
   const handleGoogleSignIn = async () => {
     if (auth) {
@@ -59,7 +69,7 @@ export default function LoginPage() {
     if (auth && email && password) {
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        // Redirect is handled by the auth state listener in the main layout
+        // Redirect is handled by the useEffect hook now.
       } catch (error: any) {
         console.error('Error signing in: ', error);
         setError(getFirebaseAuthErrorMessage(error.code));
@@ -84,7 +94,7 @@ export default function LoginPage() {
 
         // Save user data to Firestore
         const userDocRef = doc(firestore, 'users', user.uid);
-        setDocumentNonBlocking(userDocRef, {
+        await setDoc(userDocRef, {
             id: user.uid,
             email: user.email,
             name: fullName,
@@ -96,7 +106,7 @@ export default function LoginPage() {
           title: 'Account Created!',
           description: 'You have been successfully signed up and logged in.',
         });
-        // Redirect is handled by the auth state listener in the main layout
+        // Redirect is handled by the useEffect hook watching the user state.
       } catch (error: any) {
         console.error('Error signing up: ', error);
         setError(getFirebaseAuthErrorMessage(error.code));
@@ -137,6 +147,15 @@ export default function LoginPage() {
     setContactNumber('');
     setError(null);
   };
+  
+  // While checking auth state, show a loader
+  if (user === undefined) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
