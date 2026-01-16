@@ -4,10 +4,23 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Toolti
 import type { FloodHistoryEntry } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { useMemo, useState, useEffect } from 'react';
 
 interface HistoryDashboardProps {
   history: FloodHistoryEntry[];
+}
+
+interface FormattedHistoryEntry extends FloodHistoryEntry {
+    date: string;
+    time: string;
 }
 
 const chartConfig = {
@@ -58,6 +71,7 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
 
   const [formattedTime, setFormattedTime] = useState('');
   const [formattedDate, setFormattedDate] = useState('');
+  const [formattedHistory, setFormattedHistory] = useState<FormattedHistoryEntry[]>([]);
 
   useEffect(() => {
     if (latestEventDate) {
@@ -65,6 +79,19 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
       setFormattedDate(latestEventDate.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' }));
     }
   }, [latestEventDate]);
+
+  useEffect(() => {
+      setFormattedHistory(
+          history.map(entry => {
+              const d = new Date(entry.timestamp);
+              return {
+                  ...entry,
+                  date: d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }),
+                  time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              }
+          }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      );
+  }, [history]);
 
   const monthlyData = useMemo(() => {
     const months: Record<string, { zoneA: number, zoneB: number, zoneC: number }> = {};
@@ -149,6 +176,42 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
             </ChartContainer>
             </CardContent>
         </Card>
+
+        <Card className="md:col-span-2 lg:col-span-4">
+            <CardHeader>
+                <CardTitle>Detailed Flood Log</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[100px]">Zone</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead className="text-right">Duration (min)</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {formattedHistory.length > 0 ? (
+                            formattedHistory.map((entry) => (
+                            <TableRow key={entry.timestamp + entry.zone}>
+                                <TableCell className="font-medium">Zone {entry.zone}</TableCell>
+                                <TableCell>{entry.date}</TableCell>
+                                <TableCell>{entry.time}</TableCell>
+                                <TableCell className="text-right">{entry.durationMinutes}</TableCell>
+                            </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    Loading history...
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+      </Card>
     </div>
   );
 }
