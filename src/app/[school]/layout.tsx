@@ -9,12 +9,11 @@ export async function generateStaticParams() {
 
 export default async function SchoolLayout({
   children,
-  params,
+  params: { school: schoolId },
 }: {
   children: React.ReactNode;
   params: { school: string };
 }) {
-  const { school: schoolId } = params;
   const school = SCHOOLS.find((s) => s.id === schoolId);
 
   return (

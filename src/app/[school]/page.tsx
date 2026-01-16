@@ -8,8 +8,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function SchoolDashboardPage({ params }: { params: { school: string } }) {
-  const { school: schoolId } = params;
+export default async function SchoolDashboardPage({ params: { school: schoolId } }: { params: { school: string } }) {
   const school = SCHOOLS.find((s) => s.id === schoolId);
 
   if (!school) {
