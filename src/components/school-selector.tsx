@@ -20,7 +20,7 @@ export default function SchoolSelector() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center mb-4">
-           <Image src="/baha-logo.png" alt="Baha App Icon" width={80} height={80} />
+           <Droplets className="h-20 w-20 text-primary" />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground">
           Welcome to BAHA

@@ -21,7 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Droplets } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFirestore } from '@/firebase/provider';
@@ -142,7 +142,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="inline-flex items-center justify-center mb-4">
-            <Image src="/baha-logo.png" alt="Baha Logo" width={40} height={40} />
+            <Droplets className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to BAHA</CardTitle>
           <CardDescription>
