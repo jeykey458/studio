@@ -35,13 +35,9 @@ export function useFCM() {
     try {
       // ************************************************************************************
       // IMPORTANT: PASTE YOUR NEW VAPID KEY HERE
+      // The key below is an invalid placeholder and MUST be replaced.
       // ************************************************************************************
-      const VAPID_KEY = '<YOUR_VAPID_KEY_HERE>';
-
-      if (VAPID_KEY === '<YOUR_VAPID_KEY_HERE>') {
-        console.error('VAPID key is not set. Please generate one in your Firebase project settings and add it to src/hooks/use-fcm.ts');
-        return;
-      }
+      const VAPID_KEY = '<BKCiyFPZTwwi9WQRxSQr4mOeVoxyKc4SMqWj7l3cC7-eR87_fYaoffZCzSdhksgCdANE0__848NsWW4EzyPPtGY>';
       
       const messaging = getMessaging(firebaseApp);
       const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
