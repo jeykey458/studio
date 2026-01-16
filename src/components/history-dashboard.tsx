@@ -41,6 +41,14 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+function formatDuration(minutes: number): string {
+    if (isNaN(minutes)) return '0:00';
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    const paddedMinutes = remainingMinutes.toString().padStart(2, '0');
+    return `${hours}:${paddedMinutes}`;
+}
+
 export default function HistoryDashboard({ history }: HistoryDashboardProps) {
 
   const { totalEvents, avgDuration, eventsPerZone, latestEventDate } = useMemo(() => {
@@ -123,8 +131,8 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
                 <CardTitle>Average Duration</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-4xl font-bold">{avgDuration} <span className="text-lg font-normal text-muted-foreground">min</span></p>
-                <p className="text-xs text-muted-foreground">Average time to clear flood water</p>
+                <p className="text-4xl font-bold">{formatDuration(avgDuration)}</p>
+                <p className="text-xs text-muted-foreground">Average time to clear (hh:mm)</p>
             </CardContent>
         </Card>
          <Card>
@@ -188,7 +196,7 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
                             <TableHead className="w-[100px]">Zone</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Time</TableHead>
-                            <TableHead className="text-right">Duration (min)</TableHead>
+                            <TableHead className="text-right">Duration (hh:mm)</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -198,7 +206,7 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
                                 <TableCell className="font-medium">Zone {entry.zone}</TableCell>
                                 <TableCell>{entry.date}</TableCell>
                                 <TableCell>{entry.time}</TableCell>
-                                <TableCell className="text-right">{entry.durationMinutes}</TableCell>
+                                <TableCell className="text-right">{formatDuration(entry.durationMinutes)}</TableCell>
                             </TableRow>
                             ))
                         ) : (
