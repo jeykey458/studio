@@ -37,7 +37,7 @@ export function useFCM() {
       // IMPORTANT: PASTE YOUR NEW VAPID KEY HERE
       // The key below is an invalid placeholder and MUST be replaced.
       // ************************************************************************************
-      const VAPID_KEY = '<BKCiyFPZTwwi9WQRxSQr4mOeVoxyKc4SMqWj7l3cC7-eR87_fYaoffZCzSdhksgCdANE0__848NsWW4EzyPPtGY>';
+      const VAPID_KEY = 'BKCiyFPZTwwi9WQRxSQr4mOeVoxyKc4SMqWj7l3cC7-eR87_fYaoffZCzSdhksgCdANE0__848NsWW4EzyPPtGY';
       
       const messaging = getMessaging(firebaseApp);
       const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
