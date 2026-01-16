@@ -1,3 +1,4 @@
+
 import HistoryDashboard from "@/components/history-dashboard";
 import { SCHOOLS, MOCK_HISTORY } from "@/lib/constants";
 import { notFound } from 'next/navigation';
@@ -9,7 +10,8 @@ export async function generateStaticParams() {
   }
 
 export default async function HistoryPage({ params }: { params: { school: string } }) {
-    const school = SCHOOLS.find((s) => s.id === params.school);
+    const { school: schoolId } = params;
+    const school = SCHOOLS.find((s) => s.id === schoolId);
 
     if (!school) {
         notFound();

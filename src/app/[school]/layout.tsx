@@ -1,3 +1,4 @@
+
 import Header from '@/components/header';
 import { SCHOOLS } from '@/lib/constants';
 
@@ -14,11 +15,12 @@ export default async function SchoolLayout({
   children: React.ReactNode;
   params: { school: string };
 }) {
-  const school = SCHOOLS.find((s) => s.id === params.school);
+  const { school: schoolId } = params;
+  const school = SCHOOLS.find((s) => s.id === schoolId);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header schoolName={school?.name || 'School'} schoolId={params.school} />
+      <Header schoolName={school?.name || 'School'} schoolId={schoolId} />
       <main className="flex-1">{children}</main>
     </div>
   );
