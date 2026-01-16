@@ -15,7 +15,7 @@ export default async function SchoolLayout({
   children: React.ReactNode;
   params: { school: string };
 }) {
-  const { school: schoolId } = params;
+  const schoolId = params.school;
   const school = SCHOOLS.find((s) => s.id === schoolId);
 
   return (

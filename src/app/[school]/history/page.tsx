@@ -10,7 +10,7 @@ export async function generateStaticParams() {
   }
 
 export default async function HistoryPage({ params }: { params: { school: string } }) {
-    const { school: schoolId } = params;
+    const schoolId = params.school;
     const school = SCHOOLS.find((s) => s.id === schoolId);
 
     if (!school) {
