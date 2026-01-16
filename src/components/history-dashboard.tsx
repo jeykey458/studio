@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Toolti
 import type { FloodHistoryEntry } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 
 interface HistoryDashboardProps {
   history: FloodHistoryEntry[];
@@ -29,21 +29,20 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function HistoryDashboard({ history }: HistoryDashboardProps) {
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
-    setLastUpdated(new Date());
-  }, []);
-
-  const { totalEvents, avgDuration, eventsPerZone } = useMemo(() => {
+  const { totalEvents, avgDuration, eventsPerZone, latestEventDate } = useMemo(() => {
     if (history.length === 0) {
-        return { totalEvents: 0, avgDuration: 0, eventsPerZone: [] };
+        return { totalEvents: 0, avgDuration: 0, eventsPerZone: [], latestEventDate: null };
     }
     const totalDuration = history.reduce((sum, entry) => sum + entry.durationMinutes, 0);
     const zoneCounts = history.reduce((acc, entry) => {
         acc[entry.zone] = (acc[entry.zone] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
+
+    const latestEvent = history.reduce((latest, current) => {
+        return new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest;
+    });
 
     return {
         totalEvents: history.length,
@@ -52,14 +51,15 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
             { zone: 'A', count: zoneCounts['A'] || 0 },
             { zone: 'B', count: zoneCounts['B'] || 0 },
             { zone: 'C', count: zoneCounts['C'] || 0 },
-        ]
+        ],
+        latestEventDate: new Date(latestEvent.timestamp)
     };
   }, [history]);
 
   const monthlyData = useMemo(() => {
     const months: Record<string, { zoneA: number, zoneB: number, zoneC: number }> = {};
     history.forEach(entry => {
-        const month = new Date(entry.date).toLocaleString('default', { month: 'short', year: '2-digit' });
+        const month = new Date(entry.timestamp).toLocaleString('default', { month: 'short', year: '2-digit' });
         if (!months[month]) {
             months[month] = { zoneA: 0, zoneB: 0, zoneC: 0 };
         }
@@ -107,16 +107,16 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
         </Card>
         <Card>
             <CardHeader>
-                <CardTitle>Last Updated</CardTitle>
+                <CardTitle>Last Flood Event</CardTitle>
             </CardHeader>
             <CardContent>
-                {lastUpdated ? (
+                {latestEventDate ? (
                     <>
-                        <p className="text-4xl font-bold">{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        <p className="text-xs text-muted-foreground">{lastUpdated.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-4xl font-bold">{latestEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-xs text-muted-foreground">{latestEventDate.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </>
                 ) : (
-                    <p className="text-4xl font-bold animate-pulse">...</p>
+                    <p className="text-4xl font-bold">N/A</p>
                 )}
             </CardContent>
         </Card>

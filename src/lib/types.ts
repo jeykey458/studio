@@ -17,7 +17,7 @@ export interface ZoneData {
 }
 
 export interface FloodHistoryEntry {
-  date: string;
+  timestamp: string;
   zone: ZoneId;
   durationMinutes: number;
 }

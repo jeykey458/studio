@@ -56,12 +56,12 @@ export const SCHOOLS: School[] = [
 ];
 
 export const MOCK_HISTORY: FloodHistoryEntry[] = [
-    { date: '2024-07-01', zone: 'A', durationMinutes: 45 },
-    { date: '2024-07-15', zone: 'C', durationMinutes: 120 },
-    { date: '2024-08-05', zone: 'A', durationMinutes: 30 },
-    { date: '2024-08-06', zone: 'B', durationMinutes: 60 },
-    { date: '2024-08-21', zone: 'C', durationMinutes: 90 },
-    { date: '2024-09-10', zone: 'A', durationMinutes: 25 },
-    { date: '2024-09-11', zone: 'B', durationMinutes: 75 },
-    { date: '2024-09-12', zone: 'C', durationMinutes: 40 },
+    { timestamp: '2024-07-01T14:30:00Z', zone: 'A', durationMinutes: 45 },
+    { timestamp: '2024-07-15T09:15:00Z', zone: 'C', durationMinutes: 120 },
+    { timestamp: '2024-08-05T18:00:00Z', zone: 'A', durationMinutes: 30 },
+    { timestamp: '2024-08-06T11:45:00Z', zone: 'B', durationMinutes: 60 },
+    { timestamp: '2024-08-21T21:00:00Z', zone: 'C', durationMinutes: 90 },
+    { timestamp: '2024-09-10T07:20:00Z', zone: 'A', durationMinutes: 25 },
+    { timestamp: '2024-09-11T13:05:00Z', zone: 'B', durationMinutes: 75 },
+    { timestamp: '2024-09-12T16:50:00Z', zone: 'C', durationMinutes: 40 },
 ];
