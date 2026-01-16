@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -34,9 +33,18 @@ export function useFCM() {
   const retrieveToken = async () => {
      if (!firebaseApp) return;
     try {
+      // ************************************************************************************
+      // IMPORTANT: PASTE YOUR NEW VAPID KEY HERE
+      // ************************************************************************************
+      const VAPID_KEY = '<YOUR_VAPID_KEY_HERE>';
+
+      if (VAPID_KEY === '<YOUR_VAPID_KEY_HERE>') {
+        console.error('VAPID key is not set. Please generate one in your Firebase project settings and add it to src/hooks/use-fcm.ts');
+        return;
+      }
+      
       const messaging = getMessaging(firebaseApp);
-      // IMPORTANT: You need to replace 'YOUR_VAPID_KEY' with your actual VAPID key from the Firebase console.
-      const currentToken = await getToken(messaging, { vapidKey: 'BBRU-Sg2DRM_8q9JtB2hD9-0Gmsz4a33tY2iRO2zLsoGeB6T36KqK5mR_L1E22aO_7E8gS2hY3cG-iJg5q1x3c' });
+      const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
       if (currentToken) {
         setFcmToken(currentToken);
         // Here you would typically send this token to your server
