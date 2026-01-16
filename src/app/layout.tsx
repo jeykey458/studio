@@ -15,7 +15,7 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'BAHA - Real-time Flood Monitoring',
   description: 'Real-time flood monitoring and dynamic evacuation routing for schools.',
-  icons: [{ rel: 'icon', url: '/icon.svg' }],
+  icons: [{ rel: 'icon', url: '/baha-logo.svg' }],
 };
 
 export default function RootLayout({

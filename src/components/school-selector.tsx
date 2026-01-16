@@ -19,8 +19,8 @@ export default function SchoolSelector() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center bg-primary/10 text-primary p-3 rounded-full mb-4">
-           <Image src="/icon.svg" alt="Baha App Icon" width={64} height={64} />
+        <div className="inline-flex items-center justify-center mb-4">
+           <Image src="/baha-logo.svg" alt="Baha App Icon" width={80} height={80} />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground">
           Welcome to BAHA

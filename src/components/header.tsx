@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BarChart3, Building, ChevronDown, Droplets, LogOut } from 'lucide-react';
+import { BarChart3, Building, ChevronDown, LogOut } from 'lucide-react';
 import { useSchool } from '@/hooks/use-school';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import { useAuth } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
 
 interface HeaderProps {
   schoolName: string;
@@ -45,7 +46,7 @@ export default function Header({ schoolName, schoolId }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center px-4 md:px-6">
         <Link href={`/${schoolId}`} className="flex items-center gap-2">
-          <Droplets className="h-7 w-7 text-primary" />
+          <Image src="/baha-logo.svg" alt="Baha Logo" width={28} height={28} />
           <span className="text-xl font-bold font-headline text-foreground">BAHA</span>
         </Link>
         <div className="mx-4 h-6 w-px bg-border" />
