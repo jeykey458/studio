@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Toolti
 import type { FloodHistoryEntry } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 interface HistoryDashboardProps {
   history: FloodHistoryEntry[];
@@ -55,6 +55,16 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
         latestEventDate: new Date(latestEvent.timestamp)
     };
   }, [history]);
+
+  const [formattedTime, setFormattedTime] = useState('');
+  const [formattedDate, setFormattedDate] = useState('');
+
+  useEffect(() => {
+    if (latestEventDate) {
+      setFormattedTime(latestEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setFormattedDate(latestEventDate.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' }));
+    }
+  }, [latestEventDate]);
 
   const monthlyData = useMemo(() => {
     const months: Record<string, { zoneA: number, zoneB: number, zoneC: number }> = {};
@@ -112,8 +122,8 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
             <CardContent>
                 {latestEventDate ? (
                     <>
-                        <p className="text-4xl font-bold">{latestEventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        <p className="text-xs text-muted-foreground">{latestEventDate.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-4xl font-bold">{formattedTime || '...'}</p>
+                        <p className="text-xs text-muted-foreground">{formattedDate || '...'}</p>
                     </>
                 ) : (
                     <p className="text-4xl font-bold">N/A</p>
