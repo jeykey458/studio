@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -143,7 +144,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <div className="inline-flex items-center justify-center mb-4">
             <Image
-              src="/baha-logo.png"
+              src="/baha-logo.png.png"
               width={40}
               height={40}
               alt="BAHA Logo"

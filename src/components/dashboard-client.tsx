@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -63,7 +64,7 @@ export default function DashboardClient({ school }: { school: School }) {
         
         // Browser push notification
         if (notificationPermissionStatus === 'granted') {
-             new Notification(title, { body: description });
+             new Notification(title, { body: description, icon: '/baha-logo.png.png' });
         }
       }
       showToast();

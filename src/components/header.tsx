@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -47,7 +48,7 @@ export default function Header({ schoolName, schoolId }: HeaderProps) {
       <div className="container mx-auto flex h-16 items-center px-4 md:px-6">
         <Link href={`/${schoolId}`} className="flex items-center gap-2">
           <Image
-            src="/baha-logo.png"
+            src="/baha-logo.png.png"
             width={28}
             height={28}
             alt="BAHA Logo"

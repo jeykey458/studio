@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -21,7 +22,7 @@ export default function SchoolSelector() {
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center mb-4">
             <Image
-                src="/baha-logo.png"
+                src="/baha-logo.png.png"
                 width={80}
                 height={80}
                 alt="BAHA Logo"
