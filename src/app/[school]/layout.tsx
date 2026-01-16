@@ -9,16 +9,16 @@ export async function generateStaticParams() {
 
 export default async function SchoolLayout({
   children,
-  params: { school: schoolId },
+  params,
 }: {
   children: React.ReactNode;
   params: { school: string };
 }) {
-  const school = SCHOOLS.find((s) => s.id === schoolId);
+  const school = SCHOOLS.find((s) => s.id === params.school);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header schoolName={school?.name || 'School'} schoolId={schoolId} />
+      <Header schoolName={school?.name || 'School'} schoolId={params.school} />
       <main className="flex-1">{children}</main>
     </div>
   );

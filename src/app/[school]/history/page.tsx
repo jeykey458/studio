@@ -8,7 +8,7 @@ export async function generateStaticParams() {
     }));
   }
 
-export default function HistoryPage({ params }: { params: { school: string } }) {
+export default async function HistoryPage({ params }: { params: { school: string } }) {
     const school = SCHOOLS.find((s) => s.id === params.school);
 
     if (!school) {
