@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Toolti
 import type { FloodHistoryEntry } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 interface HistoryDashboardProps {
   history: FloodHistoryEntry[];
@@ -29,6 +29,11 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function HistoryDashboard({ history }: HistoryDashboardProps) {
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setLastUpdated(new Date());
+  }, []);
 
   const { totalEvents, avgDuration, eventsPerZone } = useMemo(() => {
     if (history.length === 0) {
@@ -66,7 +71,7 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
   }, [history]);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
             <CardHeader>
                 <CardTitle>Total Flood Events</CardTitle>
@@ -100,8 +105,23 @@ export default function HistoryDashboard({ history }: HistoryDashboardProps) {
                 </div>
             </CardContent>
         </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Last Updated</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {lastUpdated ? (
+                    <>
+                        <p className="text-4xl font-bold">{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-xs text-muted-foreground">{lastUpdated.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </>
+                ) : (
+                    <p className="text-4xl font-bold animate-pulse">...</p>
+                )}
+            </CardContent>
+        </Card>
 
-        <Card className="md:col-span-2 lg:col-span-3">
+        <Card className="md:col-span-2 lg:col-span-4">
             <CardHeader>
                 <CardTitle>Monthly Flood Events by Zone</CardTitle>
             </CardHeader>
