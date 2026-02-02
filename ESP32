@@ -1,11 +1,5 @@
 // Water Level Monitoring System for ESP32 with Emergency Exit Instructions
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <Firebase_ESP_Client.h>
-
-// ==================== CONFIGURATION ====================
-
 // Tank 1 - GPIO pins
 const int floatSwitch1 = 14;    // Float switch input
 const int ledRed1 = 26;         // Red LED - alarm when empty
