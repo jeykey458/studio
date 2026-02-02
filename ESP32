@@ -1,0 +1,385 @@
+// Water Level Monitoring System for ESP32 with Emergency Exit Instructions
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
+
+// ==================== CONFIGURATION ====================
+
+// Tank 1 - GPIO pins
+const int floatSwitch1 = 14;    // Float switch input
+const int ledRed1 = 26;         // Red LED - alarm when empty
+const int ledYellow1 = 25;      // Yellow LED (optional)
+const int ledGreen1 = 33;       // Green LED - normal when water detected
+
+// Tank 2 - GPIO pins
+const int floatSwitch2 = 4;     // Float switch input
+const int ledRed2 = 16;         // Red LED - alarm when empty
+const int ledYellow2 = 19;      // Yellow LED (optional)
+const int ledGreen2 = 5;        // Green LED - normal when water detected
+
+// ACTIVE Buzzer (digital control)
+const int buzzerPin = 27;       // Active buzzer control pin
+
+// Tank states
+bool tank1HasWater = false;     // true = water detected (GOOD)
+bool tank2HasWater = false;     // true = water detected (GOOD)
+
+// Buzzer control variables
+unsigned long lastBuzzerUpdate = 0;
+bool buzzerOn = false;          // Current buzzer state
+int currentAlarm = 0;           // 0=none, 1=tank1, 2=tank2, 3=both
+
+// Emergency message control
+bool messageDisplayed = false;
+unsigned long lastMessageTime = 0;
+const unsigned long MESSAGE_INTERVAL = 10000; // Show messages every 10 seconds
+
+// Buzzer pattern timing
+const unsigned long TANK1_BEEP_ON = 800;   // Tank 1: beep ON time
+const unsigned long TANK1_BEEP_OFF = 800;  // Tank 1: beep OFF time
+const unsigned long TANK2_BEEP_ON = 100;   // Tank 2: short beep time
+const unsigned long TANK2_BEEP_OFF = 200;  // Tank 2: pause between beeps
+const unsigned long BOTH_BEEP_ON = 200;    // Both: fast beep ON time
+const unsigned long BOTH_BEEP_OFF = 200;   // Both: fast beep OFF time
+
+// Firebase
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+bool firebaseReady = false;
+
+// Event tracking
+String ongoingEventIds[20];
+int ongoingEventCount = 0;
+
+struct ZoneInfo {
+  const char* zoneId;
+  const char* zoneName;
+  const char* severity;  // "WARNING" or "FLOODED"
+  String eventId;
+};
+
+ZoneInfo zonesTank1Empty[] = {
+  {"STORAGEROOM", "Storage Room", "WARNING", ""},
+  {"CLASSROOM_A", "Classroom A", "WARNING", ""},
+  {"OFFICE", "Office", "WARNING", ""},
+  {"CLASSROOM_E", "Classroom E", "WARNING", ""},
+  {"CLASSROOM_D", "Classroom D", "WARNING", ""},
+  {"CLASSROOM_B", "Classroom B", "WARNING", ""},
+  {"CLASSROOM_C", "Classroom C", "WARNING", ""}
+};
+const int tank1ZoneCount = 7;
+
+ZoneInfo zonesTank2Empty[] = {
+  {"MAIN_ENTRANCE", "Main Entrance", "FLOODED", ""}
+};
+const int tank2ZoneCount = 1;
+
+ZoneInfo zonesBothEmpty[] = {
+  {"STORAGEROOM", "Storage Room", "FLOODED", ""},
+  {"CLASSROOM_A", "Classroom A", "FLOODED", ""},
+  {"OFFICE", "Office", "FLOODED", ""},
+  {"CLASSROOM_E", "Classroom E", "FLOODED", ""},
+  {"CLASSROOM_D", "Classroom D", "FLOODED", ""},
+  {"CLASSROOM_B", "Classroom B", "FLOODED", ""},
+  {"CLASSROOM_C", "Classroom C", "FLOODED", ""},
+  {"MAIN_ENTRANCE", "Main Entrance", "FLOODED", ""},
+  {"GYM", "Gym", "FLOODED", ""}
+};
+const int bothZoneCount = 9;
+
+void setup() {
+  // Initialize Serial for debugging
+  Serial.begin(115200);
+  Serial.println("ESP32 Water Level System - Emergency Exit Version");
+  Serial.println("Logic: Water = GREEN (Good), Empty = RED + Buzzer (Alarm)");
+  Serial.println("Using: ACTIVE buzzer (digital control)");
+  
+  // Configure Tank 1 pins
+  pinMode(floatSwitch1, INPUT_PULLUP);  // Normally open float switch
+  pinMode(ledRed1, OUTPUT);
+  pinMode(ledYellow1, OUTPUT);
+  pinMode(ledGreen1, OUTPUT);
+  
+  // Configure Tank 2 pins
+  pinMode(floatSwitch2, INPUT_PULLUP);  // Normally open float switch
+  pinMode(ledRed2, OUTPUT);
+  pinMode(ledYellow2, OUTPUT);
+  pinMode(ledGreen2, OUTPUT);
+  
+  // Configure ACTIVE buzzer pin (digital output)
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW);  // Ensure buzzer is OFF initially
+  
+  // Initialize all LEDs to OFF
+  digitalWrite(ledRed1, LOW);
+  digitalWrite(ledYellow1, LOW);
+  digitalWrite(ledGreen1, LOW);
+  digitalWrite(ledRed2, LOW);
+  digitalWrite(ledYellow2, LOW);
+  digitalWrite(ledGreen2, LOW);
+  
+  Serial.println("System ready - monitoring flood conditions");
+  Serial.println("==========================================");
+}
+
+void loop() {
+  // Read float switch states (LOW = water detected, HIGH = no water)
+  bool prevTank1 = tank1HasWater;
+  bool prevTank2 = tank2HasWater;
+  
+  tank1HasWater = (digitalRead(floatSwitch1) == LOW);  // LOW = water = GOOD
+  tank2HasWater = (digitalRead(floatSwitch2) == LOW);  // LOW = water = GOOD
+  
+  // Determine current alarm state
+  if (!tank1HasWater && !tank2HasWater) {
+    currentAlarm = 3;  // Both tanks empty (CRITICAL)
+  } else if (!tank1HasWater) {
+    currentAlarm = 1;  // Only Tank 1 empty (WARNING)
+  } else if (!tank2HasWater) {
+    currentAlarm = 2;  // Only Tank 2 empty (CRITICAL)
+  } else {
+    currentAlarm = 0;  // Both tanks have water (NORMAL)
+  }
+  
+  // Update LED indicators based on tank states
+  updateLEDs();
+  
+  // Control ACTIVE buzzer with different patterns for each alarm type
+  controlActiveBuzzer();
+  
+  // Display emergency exit instructions when alarm is active
+  displayEmergencyInstructions();
+  
+  // Print state changes to Serial Monitor
+  if (prevTank1 != tank1HasWater || prevTank2 != tank2HasWater) {
+    printStatus();
+  }
+  
+  // Small delay for stability
+  delay(50);
+}
+
+void updateLEDs() {
+  // Tank 1 LED indicators
+  if (tank1HasWater) {
+    // Tank 1 has water = GOOD condition
+    digitalWrite(ledGreen1, HIGH);    // Green LED ON
+    digitalWrite(ledRed1, LOW);       // Red LED OFF
+    digitalWrite(ledYellow1, LOW);    // Yellow LED OFF
+  } else {
+    // Tank 1 is empty = ALARM condition
+    digitalWrite(ledGreen1, LOW);     // Green LED OFF
+    digitalWrite(ledRed1, HIGH);      // Red LED ON
+    digitalWrite(ledYellow1, LOW);    // Yellow LED OFF
+  }
+  
+  // Tank 2 LED indicators
+  if (tank2HasWater) {
+    // Tank 2 has water = GOOD condition
+    digitalWrite(ledGreen2, HIGH);    // Green LED ON
+    digitalWrite(ledRed2, LOW);       // Red LED OFF
+    digitalWrite(ledYellow2, LOW);    // Yellow LED OFF
+  } else {
+    // Tank 2 is empty = ALARM condition
+    digitalWrite(ledGreen2, LOW);     // Green LED OFF
+    digitalWrite(ledRed2, HIGH);      // Red LED ON
+    digitalWrite(ledYellow2, LOW);    // Yellow LED OFF
+  }
+}
+
+void controlActiveBuzzer() {
+  unsigned long currentMillis = millis();
+  
+  switch(currentAlarm) {
+    case 0: // No alarm - both tanks have water
+      // Turn OFF active buzzer
+      digitalWrite(buzzerPin, LOW);
+      buzzerOn = false;
+      messageDisplayed = false;
+      break;
+      
+    case 1: // Tank 1 empty alarm
+      // Pattern: Slow beeps (beep for 800ms, pause for 800ms)
+      if (buzzerOn) {
+        // Buzzer is currently ON
+        if (currentMillis - lastBuzzerUpdate >= TANK1_BEEP_ON) {
+          digitalWrite(buzzerPin, LOW);  // Turn OFF buzzer
+          buzzerOn = false;
+          lastBuzzerUpdate = currentMillis;
+        }
+      } else {
+        // Buzzer is currently OFF
+        if (currentMillis - lastBuzzerUpdate >= TANK1_BEEP_OFF) {
+          digitalWrite(buzzerPin, HIGH); // Turn ON buzzer
+          buzzerOn = true;
+          lastBuzzerUpdate = currentMillis;
+        }
+      }
+      break;
+      
+    case 2: // Tank 2 empty alarm
+      // Pattern: Fast double beeps (beep-beep-pause pattern)
+      static int tank2BeepCounter = 0;
+      
+      if (currentMillis - lastBuzzerUpdate >= 100) {
+        if (tank2BeepCounter < 2) {
+          // Beep phase
+          digitalWrite(buzzerPin, HIGH);  // Buzzer ON for short beep
+          delay(50);                      // Short beep duration
+          digitalWrite(buzzerPin, LOW);   // Buzzer OFF
+          tank2BeepCounter++;
+          lastBuzzerUpdate = currentMillis;
+        } else {
+          // Pause phase
+          digitalWrite(buzzerPin, LOW);   // Ensure buzzer is OFF
+          if (currentMillis - lastBuzzerUpdate >= 500) {
+            tank2BeepCounter = 0;
+            lastBuzzerUpdate = currentMillis;
+          }
+        }
+      }
+      break;
+      
+    case 3: // Both tanks empty alarm (most urgent)
+      // Pattern: Rapid continuous beeping (200ms on/off)
+      if (buzzerOn) {
+        // Buzzer is currently ON
+        if (currentMillis - lastBuzzerUpdate >= BOTH_BEEP_ON) {
+          digitalWrite(buzzerPin, LOW);  // Turn OFF buzzer
+          buzzerOn = false;
+          lastBuzzerUpdate = currentMillis;
+        }
+      } else {
+        // Buzzer is currently OFF
+        if (currentMillis - lastBuzzerUpdate >= BOTH_BEEP_OFF) {
+          digitalWrite(buzzerPin, HIGH); // Turn ON buzzer
+          buzzerOn = true;
+          lastBuzzerUpdate = currentMillis;
+        }
+      }
+      break;
+  }
+}
+
+void displayEmergencyInstructions() {
+  unsigned long currentMillis = millis();
+  
+  // Display emergency messages at regular intervals when alarm is active
+  if (currentAlarm > 0 && currentMillis - lastMessageTime >= MESSAGE_INTERVAL) {
+    Serial.println("\n==========================================");
+    Serial.println("       EMERGENCY FLOOD ALERT!");
+    Serial.println("==========================================");
+    
+    switch(currentAlarm) {
+      case 1: // Tank 1 empty
+        Serial.println("ALARM LEVEL: WARNING");
+        Serial.println("FLOODED AREAS:");
+        Serial.println("  • Storage Room");
+        Serial.println("  • Classroom A");
+        Serial.println("  • Office");
+        Serial.println("  • Classroom E");
+        Serial.println("  • Classroom D");
+        Serial.println("  • Classroom B");
+        Serial.println("  • Classroom C");
+        Serial.println("");
+        Serial.println("SAFE AREAS:");
+        Serial.println("  ✓ Library");
+        Serial.println("  ✓ Lab");
+        Serial.println("");
+        Serial.println("🚨 EMERGENCY EXIT INSTRUCTION:");
+        Serial.println("  PROCEED TO: MAIN EXIT");
+        Serial.println("  AVOID: Flooded classrooms and storage");
+        break;
+        
+      case 2: // Tank 2 empty
+        Serial.println("ALARM LEVEL: CRITICAL");
+        Serial.println("FLOODED AREAS:");
+        Serial.println("  • Main Exit");
+        Serial.println("");
+        Serial.println("SAFE AREAS:");
+        Serial.println("  ✓ All classrooms");
+        Serial.println("  ✓ Office");
+        Serial.println("  ✓ Storage Room");
+        Serial.println("  ✓ Library");
+        Serial.println("  ✓ Lab");
+        Serial.println("");
+        Serial.println("🚨 EMERGENCY EXIT INSTRUCTION:");
+        Serial.println("  PROCEED TO: GYM EXIT");
+        Serial.println("  AVOID: Main Exit area");
+        break;
+        
+      case 3: // Both tanks empty
+        Serial.println("ALARM LEVEL: EXTREME CRITICAL");
+        Serial.println("FLOODED AREAS:");
+        Serial.println("  • EVERYTHING EXCEPT:");
+        Serial.println("    ✓ Library");
+        Serial.println("    ✓ Lab");
+        Serial.println("");
+        Serial.println("SPECIFICALLY FLOODED:");
+        Serial.println("  • Storage Room");
+        Serial.println("  • Classroom A, B, C, D, E");
+        Serial.println("  • Office");
+        Serial.println("  • Main Exit");
+        Serial.println("  • All corridors");
+        Serial.println("");
+        Serial.println("🚨 EMERGENCY EXIT INSTRUCTION:");
+        Serial.println("  PROCEED TO: GYM EXIT IMMEDIATELY!");
+        Serial.println("  SAFE ZONES: Library and Lab only");
+        Serial.println("  WARNING: All other exits are flooded!");
+        break;
+    }
+    
+    Serial.println("==========================================");
+    Serial.println("Time: " + String(millis() / 1000) + " seconds");
+    Serial.println("==========================================");
+    
+    lastMessageTime = currentMillis;
+    messageDisplayed = true;
+  }
+}
+
+void printStatus() {
+  Serial.println("\n--- SYSTEM STATUS UPDATE ---");
+  Serial.print("Tank 1 (Lower): ");
+  Serial.println(tank1HasWater ? "WATER DETECTED ✓" : "EMPTY ✗");
+  
+  Serial.print("Tank 2 (Upper): ");
+  Serial.println(tank2HasWater ? "WATER DETECTED ✓" : "EMPTY ✗");
+  
+  switch(currentAlarm) {
+    case 0:
+      Serial.println("STATUS: NORMAL - All areas safe");
+      break;
+    case 1:
+      Serial.println("STATUS: WARNING - Multiple classrooms flooded");
+      break;
+    case 2:
+      Serial.println("STATUS: CRITICAL - Main Exit flooded");
+      break;
+    case 3:
+      Serial.println("STATUS: EXTREME CRITICAL - Widespread flooding");
+      break;
+  }
+  Serial.println("----------------------------");
+}
+
+// Test function
+void testEmergencyMessages() {
+  Serial.println("\n=== TESTING EMERGENCY MESSAGES ===");
+  
+  Serial.println("\n1. Testing Tank 1 empty scenario:");
+  Serial.println("Should show: Storage Room + Classrooms A,B,C,D,E + Office flooded");
+  Serial.println("Exit: Main Exit");
+  
+  Serial.println("\n2. Testing Tank 2 empty scenario:");
+  Serial.println("Should show: Main Exit flooded");
+  Serial.println("Exit: Gym Exit");
+  
+  Serial.println("\n3. Testing Both tanks empty scenario:");
+  Serial.println("Should show: Everything except Library & Lab flooded");
+  Serial.println("Exit: Gym Exit");
+  
+  Serial.println("\n=== TEST COMPLETE ===");
+}
